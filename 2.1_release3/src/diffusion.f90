@@ -22,60 +22,60 @@
 ! c_i:j = c(x_i, y_j)
 !
 module diffusion_equ
-	implicit none
+    implicit none
 
-	real*8, parameter :: pi = 4.0d0 * datan(1.0d0)
-	real*8, parameter :: pi2 = pi**2
+    real*8, parameter :: pi = 4.0d0 * datan(1.0d0)
+    real*8, parameter :: pi2 = pi**2
 
-	real*8, parameter :: eps = 1.0
+    real*8, parameter :: eps = 1.0
 
-	real*8, parameter :: dx = 1.0
-	real*8, parameter :: dy = eps
+    real*8, parameter :: dx = 1.0
+    real*8, parameter :: dy = eps
 
-	contains
+    contains
 
-	real*8 function f_diff(x, y)
-		implicit none
-		real*8 :: x, y
+    real*8 function f_diff(x, y)
+        implicit none
+        real*8 :: x, y
 
-		f_diff = (1 + eps) * cos(pi * x) * cos(pi * y) * pi2
-		return
-	end function
+        f_diff = (1 + eps) * cos(pi * x) * cos(pi * y) * pi2
+        return
+    end function
 
-	real*8 function g_D1(x)
-		implicit none
-		real*8 :: x
+    real*8 function g_D1(x)
+        implicit none
+        real*8 :: x
 
-		g_D1 = -cos(pi * x)
-		return
-	end function
+        g_D1 = -cos(pi * x)
+        return
+    end function
 
 
-	real*8 function g_D2(y)
-		implicit none
-		real*8 :: y
+    real*8 function g_D2(y)
+        implicit none
+        real*8 :: y
 
-		g_D2 = -cos(pi * y)
-		return
-	end function
+        g_D2 = -cos(pi * y)
+        return
+    end function
 
-	real*8 function g_N1(y)
-		implicit none
-		real*8 :: y
+    real*8 function g_N1(y)
+        implicit none
+        real*8 :: y
 
-		g_N1 = 0.0
-		return
-	end function
+        g_N1 = 0.0
+        return
+    end function
 
-	real*8 function g_N2(x)
-		implicit none
-		real*8 :: x
+    real*8 function g_N2(x)
+        implicit none
+        real*8 :: x
 
-		g_N2 = 0.0
-		return
-	end function
+        g_N2 = 0.0
+        return
+    end function
 
-	subroutine generate_matrix(N, IA, JA, A, F)
+    subroutine generate_matrix(N, IA, JA, A, F)
         implicit none
         integer*4 :: N
         integer*4, intent(in out) :: IA(:), JA(:)
@@ -84,367 +84,367 @@ module diffusion_equ
         integer*4 :: i, j, k
         real*8 :: h, hh
 
-		! 
-		h = 1.0 / N
-		hh = h**2
+        ! 
+        h = 1.0 / N
+        hh = h**2
 
-		! BOUNDARY POINTS (N2)
-		! Edge point
-		i = 0
-		j = 0
-		IA(1) = 1
+        ! BOUNDARY POINTS (N2)
+        ! Edge point
+        i = 0
+        j = 0
+        IA(1) = 1
 
-		k = N*j + i + 1
-		JA(IA(k)) = k
-		A(IA(k) ) = (dx / hh) + (dy / hh)
+        k = N*j + i + 1
+        JA(IA(k)) = k
+        A(IA(k) ) = (dx / hh) + (dy / hh)
 
-		JA(IA(k) + 1) = k + 1
-		A(IA(k)  + 1) = -dx / hh
+        JA(IA(k) + 1) = k + 1
+        A(IA(k)  + 1) = -dx / hh
 
-		JA(IA(k) + 2) = k + N
-		A(IA(k)  + 2) = -dy / hh
-		
-		F(k) = ( (g_N1(0.0d0) / h) + (g_N2(0.0d0) / h) + (0.5d0 * f_diff(0.0d0, 0.0d0)) )
-		IA(k + 1) = IA(k) + 3
-		
-		! Boundary points (N2)
-		do i = 1, N-2
-			k = N*j + i + 1
+        JA(IA(k) + 2) = k + N
+        A(IA(k)  + 2) = -dy / hh
+        
+        F(k) = ( (g_N1(0.0d0) / h) + (g_N2(0.0d0) / h) + (0.5d0 * f_diff(0.0d0, 0.0d0)) )
+        IA(k + 1) = IA(k) + 3
+        
+        ! Boundary points (N2)
+        do i = 1, N-2
+            k = N*j + i + 1
 
-			JA(IA(k)) = k - 1
-			A(IA(k) ) = -dx / (2*hh)
-			
-			JA(IA(k) + 1) = k
-			A(IA(k)  + 1) = (dy / hh) + (dx / hh) 
-	
-			JA(IA(k) + 2) = k + 1
-			A(IA(k)  + 2) = -dx / (2*hh)
+            JA(IA(k)) = k - 1
+            A(IA(k) ) = -dx / (2*hh)
+            
+            JA(IA(k) + 1) = k
+            A(IA(k)  + 1) = (dy / hh) + (dx / hh) 
+    
+            JA(IA(k) + 2) = k + 1
+            A(IA(k)  + 2) = -dx / (2*hh)
 
-			JA(IA(k) + 3) = k + N
-			A(IA(k)  + 3) = -dy / hh
-			
-			F(k) = ( (0.5d0 * f_diff(i*h, 0.0d0)) + (g_N2(i*h) / h) )
-			IA(k + 1) = IA(k) + 4 
-		enddo	
+            JA(IA(k) + 3) = k + N
+            A(IA(k)  + 3) = -dy / hh
+            
+            F(k) = ( (0.5d0 * f_diff(i*h, 0.0d0)) + (g_N2(i*h) / h) )
+            IA(k + 1) = IA(k) + 4 
+        enddo	
 
-		! Edge point (N1-D2)
-		i = N-1
-		k = N*j + i + 1
+        ! Edge point (N1-D2)
+        i = N-1
+        k = N*j + i + 1
 
-		JA(IA(k)) = k - 1
-		A(IA(k) ) = -dx / (2*hh)
+        JA(IA(k)) = k - 1
+        A(IA(k) ) = -dx / (2*hh)
 
-		JA(IA(k) + 1) = k
-		A(IA(k)  + 1) = (dy / hh) + (dx / hh) 
+        JA(IA(k) + 1) = k
+        A(IA(k)  + 1) = (dy / hh) + (dx / hh) 
 
-		JA(IA(k) + 2) = k + N
-		A(IA(k)  + 2) = -dy / hh
+        JA(IA(k) + 2) = k + N
+        A(IA(k)  + 2) = -dy / hh
 
-		F(k) = ( (0.5d0 * f_diff(i*h, 0.0d0)) + (g_N2(i*h) / h) - (dx*g_D2(1.0d0) / (2*hh)) )
-		IA(k + 1) = IA(k) + 3
-
-		! INNER AREA
-		do j = 1, N-2
-			! Boundary points (N1)
-			i = 0
-			k = N*j + i + 1
-
-			JA(IA(k)) = k - N
-			A(IA(k) ) = -dy / (2*hh)
-
-			JA(IA(k) + 1) = k
-			A(IA(k)  + 1) = (dx / hh) + (dy / hh)
-			
-			JA(IA(k) + 2) = k + 1
-			A(IA(k)  + 2) = -dx / hh
-
-			JA(IA(k) + 3) = k + N
-			A(IA(k)  + 3) = -dy / (2*hh)
-			
-			F(k) = ( (0.5d0 * f_diff(0.0d0, j*h)) + (g_N1(j*h) / h) )
-			IA(k + 1) = IA(k) + 4 
-
-			! Inner points
-			do i = 1, N-2
-				k = N*j + i + 1
-
-				JA(IA(k)) = k - N
-				A(IA(k) ) = -dy / hh
-
-				JA(IA(k) + 1) = k - 1
-				A(IA(k)  + 1) = -dx / hh 
-
-				JA(IA(k) + 2) = k
-				A(IA(k)  + 2) = (2.0*dx + 2.0*dy) / hh
-
-				JA(IA(k) + 3) = k + 1
-				A(IA(k)  + 3) = -dx / hh 
-
-				JA(IA(k) + 4) = k + N
-				A(IA(k)  + 4) = -dy / hh
- 
-				F(k) = f_diff(i*h, j*h)
-				IA(k + 1) = IA(k) + 5
-			enddo
-
-			! Boundary points (D2)
-			i = N - 1
-			k = N*j + i + 1
-
-			JA(IA(k)) = k - N
-			A(IA(k) ) = -dy / hh
-
-			JA(IA(k) + 1) = k - 1
-			A(IA(k)  + 1) = -dx / hh
-
-			JA(IA(k) + 2) = k
-			A(IA(k)  + 2) = (2.0*dx + 2.0*dy) / hh
-
-			JA(IA(k) + 3) = k + N
-			A(IA(k)  + 3) = -dy / hh
-
-			F(k) = f_diff(i*h, j*h) + (dx * g_D2(j*h) / hh)
-		    IA(k + 1) = IA(k) + 4 
-
-			!print *, 'D2 is OK'
-		enddo		
-
-		! BOUNDARY POINTS (D1)
-		j = N-1
-
-		! Edge point (N1-D1)
-		i = 0
-		k = N*j + i + 1
-
-		JA(IA(k)) = k - N
-		A(IA(k) ) = -dy / (2*hh)
-
-		JA(IA(k) + 1) = k
-		A(IA(k)  + 1) = (dx / hh) + (dy / hh)
-
-		JA(IA(k) + 2) = k + 1
-		A(IA(k)  + 2) = -dx / hh
-
-		F(k) = ( (0.5d0 * f_diff(0.0d0, j*h)) + (g_N1(j*h) / h) - (dy*g_D1(1.0d0) / (2*hh)) )
-		IA(k + 1) = IA(k) + 3 
-
-		! Boundary points (D1)
-		do i = 1, N-2
-			k = N*j + i + 1
-
-			JA(IA(k)) = k - N
-			A(IA(k) ) = -dy / hh
-			
-			JA(IA(k) + 1) = k - 1
-			A(IA(k)  + 1) = -dx / hh
-		
-			JA(IA(k) + 2) = k
-			A(IA(k)  + 2) = (2.0*dx + 2.0*dy) / hh			
-
-			JA(IA(k) + 3) = k + 1
-			A(IA(k)  + 3) = -dx / hh			
-
-			F(k) = f_diff(i*h, j*h) + (dy * g_D1(i*h) / hh)
-			IA(k + 1) = IA(k) + 4
-		enddo
-
-		! Edge point (D1-D2)
-		i = N-1
-		k = N*j + i + 1
-
-		JA(IA(k)) = k - N
-		A(IA(k) ) = -dy / hh
-
-		JA(IA(k) + 1) = k - 1
-		A(IA(k)  + 1) = -dx / hh
-
-		JA(IA(k) + 2) = k
-		A(IA(k)  + 2) = (2.0*dx + 2.0*dy) / hh
-		
-		F(k) = f_diff(i*h, j*h) + (dy * g_D1(i*h) / hh) + (dx * g_D2(j*h) / hh)
+        F(k) = ( (0.5d0 * f_diff(i*h, 0.0d0)) + (g_N2(i*h) / h) - (dx*g_D2(1.0d0) / (2*hh)) )
         IA(k + 1) = IA(k) + 3
 
-		return
-	end subroutine
+        ! INNER AREA
+        do j = 1, N-2
+            ! Boundary points (N1)
+            i = 0
+            k = N*j + i + 1
 
-	real*8 function solve(x, y)
-		implicit none
-		real*8 :: x, y
+            JA(IA(k)) = k - N
+            A(IA(k) ) = -dy / (2*hh)
 
-		solve = cos(pi * x) * cos(pi * y)
-		return
-	end function
+            JA(IA(k) + 1) = k
+            A(IA(k)  + 1) = (dx / hh) + (dy / hh)
+            
+            JA(IA(k) + 2) = k + 1
+            A(IA(k)  + 2) = -dx / hh
 
-	real*8 function c_check_err(N, c)
-		implicit none
-		integer*4 :: N
-		real*8, intent(in out) :: c(:)
+            JA(IA(k) + 3) = k + N
+            A(IA(k)  + 3) = -dy / (2*hh)
+            
+            F(k) = ( (0.5d0 * f_diff(0.0d0, j*h)) + (g_N1(j*h) / h) )
+            IA(k + 1) = IA(k) + 4 
 
-		integer*4 :: i, j
-		real*8 :: h, er, mx
+            ! Inner points
+            do i = 1, N-2
+                k = N*j + i + 1
 
-		h = 1.0 / N
-		er = 0.0d0
-		mx = 0.0d0
-		do j = 0, N-1
-			do i = 0, N-1
-				! print *, 'c = ', c((j-1)*(N-1) + i)
-				! print *, 's = ', solve(i*h, j*h)
-				er = abs( c(N*j + i + 1) - solve(i*h, j*h) ) 
-				if (er > mx) then
-					mx = er
-				endif
-			enddo
-		enddo
+                JA(IA(k)) = k - N
+                A(IA(k) ) = -dy / hh
 
-		c_check_err = mx
-		return
-	end function
+                JA(IA(k) + 1) = k - 1
+                A(IA(k)  + 1) = -dx / hh 
 
-	real*8 function L2_check_err(N, c)
-		implicit none
-		integer*4 :: N
-		real*8, intent(in out) :: c(:)
+                JA(IA(k) + 2) = k
+                A(IA(k)  + 2) = (2.0*dx + 2.0*dy) / hh
 
-		real*8 :: A(3, 9)
-		integer*4 :: i, j, k, m
-		real*8 :: h, S, T
-		real*8 :: f1, f2, f3, f4, c_m
-		real*8 :: x1, x2, x3, y1, y2, y3, x, y
+                JA(IA(k) + 3) = k + 1
+                A(IA(k)  + 3) = -dx / hh 
 
-		real*8 :: a11, a12, a21, a22, a23
-		real*8 :: w1, w2
-		
-		a11 = 0.12495d0
-		a12 = 0.43752d0
-		a21 = 0.79711d0
+                JA(IA(k) + 4) = k + N
+                A(IA(k)  + 4) = -dy / hh
+ 
+                F(k) = f_diff(i*h, j*h)
+                IA(k + 1) = IA(k) + 5
+            enddo
 
-		a22 = 0.16541d0
-		a23 = 0.03748d0
+            ! Boundary points (D2)
+            i = N - 1
+            k = N*j + i + 1
 
-		w1 = 0.20595d0
-		w2 = 0.06369d0
+            JA(IA(k)) = k - N
+            A(IA(k) ) = -dy / hh
 
-		! Init A
-		A(1,1) = a11 
-		A(2,1) = a12
-		A(3,1) = a12
+            JA(IA(k) + 1) = k - 1
+            A(IA(k)  + 1) = -dx / hh
 
-		A(1,2) = a12 
-		A(2,2) = a11
-		A(3,2) = a12
+            JA(IA(k) + 2) = k
+            A(IA(k)  + 2) = (2.0*dx + 2.0*dy) / hh
 
-		A(1,3) = a12 
-		A(2,3) = a12
-		A(3,3) = a11
+            JA(IA(k) + 3) = k + N
+            A(IA(k)  + 3) = -dy / hh
 
-		A(1,4) = a21 
-		A(2,4) = a22
-		A(3,4) = a23
+            F(k) = f_diff(i*h, j*h) + (dx * g_D2(j*h) / hh)
+            IA(k + 1) = IA(k) + 4 
 
-		A(1,5) = a21 
-		A(2,5) = a23
-		A(3,5) = a22
+            !print *, 'D2 is OK'
+        enddo		
 
-		A(1,6) = a22 
-		A(2,6) = a21
-		A(3,6) = a23
+        ! BOUNDARY POINTS (D1)
+        j = N-1
 
-		A(1,7) = a22 
-		A(2,7) = a23
-		A(3,7) = a21
+        ! Edge point (N1-D1)
+        i = 0
+        k = N*j + i + 1
 
-		A(1,8) = a23 
-		A(2,8) = a21
-		A(3,8) = a22
+        JA(IA(k)) = k - N
+        A(IA(k) ) = -dy / (2*hh)
 
-		A(1,9) = a23 
-		A(2,9) = a22
-		A(3,9) = a21
+        JA(IA(k) + 1) = k
+        A(IA(k)  + 1) = (dx / hh) + (dy / hh)
 
-		! Program
-		h = 1.0 / N
-		S = 0.0d0
+        JA(IA(k) + 2) = k + 1
+        A(IA(k)  + 2) = -dx / hh
 
-		! Compute integral
-		T = 0.5d0 * h * h
-		do j = 0, N-1
-			do i = 0, N-1
-				k = N*j + i + 1												
+        F(k) = ( (0.5d0 * f_diff(0.0d0, j*h)) + (g_N1(j*h) / h) - (dy*g_D1(1.0d0) / (2*hh)) )
+        IA(k + 1) = IA(k) + 3 
 
-				! Edge point
-				f1 = c(k)
+        ! Boundary points (D1)
+        do i = 1, N-2
+            k = N*j + i + 1
 
-				if (i < (N-1)) then
-					f2 = c(k+1)
-				else
-					f2 = g_D2(j*h)
-				endif
+            JA(IA(k)) = k - N
+            A(IA(k) ) = -dy / hh
+            
+            JA(IA(k) + 1) = k - 1
+            A(IA(k)  + 1) = -dx / hh
+        
+            JA(IA(k) + 2) = k
+            A(IA(k)  + 2) = (2.0*dx + 2.0*dy) / hh			
 
-				if (j < (N-1)) then
-					f3 = c(k+N)
-				else
-					f3 = g_D2(i*h)
-				endif
+            JA(IA(k) + 3) = k + 1
+            A(IA(k)  + 3) = -dx / hh			
 
-				if (i < (N-1)) then
-					if (j < (N-1)) then
-						f4 = c(k+N+1)
-					else
-						f4 = g_D1((i+1)*h) 
-					endif
-				else
-					f4 = g_D2((j+1)*h)
-				endif			
-				
-				x1 = i*h
-				y1 = j*h
-				x3 = x1 + h
-    			y3 = y1 + h				
+            F(k) = f_diff(i*h, j*h) + (dy * g_D1(i*h) / hh)
+            IA(k + 1) = IA(k) + 4
+        enddo
 
-				! Down-triangle
-				x2 = x1 + h
-				y2 = y1
-				do m = 1, 3
-					x = x1*A(1, m) + x2*A(2, m) + x3*A(3, m)					
-					y = y1*A(1, m) + y2*A(2, m) + y3*A(3, m)
+        ! Edge point (D1-D2)
+        i = N-1
+        k = N*j + i + 1
 
-					c_m = f1 + (f2 - f1)*(x - x1)/h + (f4 - f2)*(y - y1)/h
-					S = S + T*w1*( (c_m - solve(x,y))**2 )				
-				enddo
+        JA(IA(k)) = k - N
+        A(IA(k) ) = -dy / hh
 
-				do m = 4, 9
-					x = x1*A(1, m) + x2*A(2, m) + x3*A(3, m)					
-					y = y1*A(1, m) + y2*A(2, m) + y3*A(3, m)
-					
-					c_m = f1 + (f2 - f1)*(x - x1)/h + (f4 - f2)*(y - y1)/h
-					S = S + T*w2*( (c_m - solve(x,y))**2 )
-				enddo
+        JA(IA(k) + 1) = k - 1
+        A(IA(k)  + 1) = -dx / hh
 
-				! Up-triangle
-				x2 = x1
-				y2 = y1 + h
-				do m = 1, 3
-					x = x1*A(1, m) + x2*A(2, m) + x3*A(3, m)					
-					y = y1*A(1, m) + y2*A(2, m) + y3*A(3, m)
+        JA(IA(k) + 2) = k
+        A(IA(k)  + 2) = (2.0*dx + 2.0*dy) / hh
+        
+        F(k) = f_diff(i*h, j*h) + (dy * g_D1(i*h) / hh) + (dx * g_D2(j*h) / hh)
+        IA(k + 1) = IA(k) + 3
 
-					c_m = f1 + (f4 - f3)*(x - x1)/h + (f3 - f1)*(y - y1)/h
-					S = S + T*w1*( (c_m - solve(x,y))**2 )				
-				enddo
-				do m = 4, 9
-					x = x1*A(1, m) + x2*A(2, m) + x3*A(3, m)					
-					y = y1*A(1, m) + y2*A(2, m) + y3*A(3, m)
+        return
+    end subroutine
 
-					c_m = f1 + (f4 - f3)*(x - x1)/h + (f3 - f1)*(y - y1)/h
-					S = S + T*w2*( (c_m - solve(x,y))**2 )
-				enddo
+    real*8 function solve(x, y)
+        implicit none
+        real*8 :: x, y
 
-			enddo
-		enddo
-			
-		L2_check_err = sqrt(S)
+        solve = cos(pi * x) * cos(pi * y)
+        return
+    end function
 
-		return
-	end function
+    real*8 function c_check_err(N, c)
+        implicit none
+        integer*4 :: N
+        real*8, intent(in out) :: c(:)
+
+        integer*4 :: i, j
+        real*8 :: h, er, mx
+
+        h = 1.0 / N
+        er = 0.0d0
+        mx = 0.0d0
+        do j = 0, N-1
+            do i = 0, N-1
+                ! print *, 'c = ', c((j-1)*(N-1) + i)
+                ! print *, 's = ', solve(i*h, j*h)
+                er = abs( c(N*j + i + 1) - solve(i*h, j*h) ) 
+                if (er > mx) then
+                    mx = er
+                endif
+            enddo
+        enddo
+
+        c_check_err = mx
+        return
+    end function
+
+    real*8 function L2_check_err(N, c)
+        implicit none
+        integer*4 :: N
+        real*8, intent(in out) :: c(:)
+
+        real*8 :: A(3, 9)
+        integer*4 :: i, j, k, m
+        real*8 :: h, S, T
+        real*8 :: f1, f2, f3, f4, c_m
+        real*8 :: x1, x2, x3, y1, y2, y3, x, y
+
+        real*8 :: a11, a12, a21, a22, a23
+        real*8 :: w1, w2
+        
+        a11 = 0.12495d0
+        a12 = 0.43752d0
+        a21 = 0.79711d0
+
+        a22 = 0.16541d0
+        a23 = 0.03748d0
+
+        w1 = 0.20595d0
+        w2 = 0.06369d0
+
+        ! Init A
+        A(1,1) = a11 
+        A(2,1) = a12
+        A(3,1) = a12
+
+        A(1,2) = a12 
+        A(2,2) = a11
+        A(3,2) = a12
+
+        A(1,3) = a12 
+        A(2,3) = a12
+        A(3,3) = a11
+
+        A(1,4) = a21 
+        A(2,4) = a22
+        A(3,4) = a23
+
+        A(1,5) = a21 
+        A(2,5) = a23
+        A(3,5) = a22
+
+        A(1,6) = a22 
+        A(2,6) = a21
+        A(3,6) = a23
+
+        A(1,7) = a22 
+        A(2,7) = a23
+        A(3,7) = a21
+
+        A(1,8) = a23 
+        A(2,8) = a21
+        A(3,8) = a22
+
+        A(1,9) = a23 
+        A(2,9) = a22
+        A(3,9) = a21
+
+        ! Program
+        h = 1.0 / N
+        S = 0.0d0
+
+        ! Compute integral
+        T = 0.5d0 * h * h
+        do j = 0, N-1
+            do i = 0, N-1
+                k = N*j + i + 1												
+
+                ! Edge point
+                f1 = c(k)
+
+                if (i < (N-1)) then
+                    f2 = c(k+1)
+                else
+                    f2 = g_D2(j*h)
+                endif
+
+                if (j < (N-1)) then
+                    f3 = c(k+N)
+                else
+                    f3 = g_D2(i*h)
+                endif
+
+                if (i < (N-1)) then
+                    if (j < (N-1)) then
+                        f4 = c(k+N+1)
+                    else
+                        f4 = g_D1((i+1)*h) 
+                    endif
+                else
+                    f4 = g_D2((j+1)*h)
+                endif			
+                
+                x1 = i*h
+                y1 = j*h
+                x3 = x1 + h
+                y3 = y1 + h				
+
+                ! Down-triangle
+                x2 = x1 + h
+                y2 = y1
+                do m = 1, 3
+                    x = x1*A(1, m) + x2*A(2, m) + x3*A(3, m)					
+                    y = y1*A(1, m) + y2*A(2, m) + y3*A(3, m)
+
+                    c_m = f1 + (f2 - f1)*(x - x1)/h + (f4 - f2)*(y - y1)/h
+                    S = S + T*w1*( (c_m - solve(x,y))**2 )				
+                enddo
+
+                do m = 4, 9
+                    x = x1*A(1, m) + x2*A(2, m) + x3*A(3, m)					
+                    y = y1*A(1, m) + y2*A(2, m) + y3*A(3, m)
+                    
+                    c_m = f1 + (f2 - f1)*(x - x1)/h + (f4 - f2)*(y - y1)/h
+                    S = S + T*w2*( (c_m - solve(x,y))**2 )
+                enddo
+
+                ! Up-triangle
+                x2 = x1
+                y2 = y1 + h
+                do m = 1, 3
+                    x = x1*A(1, m) + x2*A(2, m) + x3*A(3, m)					
+                    y = y1*A(1, m) + y2*A(2, m) + y3*A(3, m)
+
+                    c_m = f1 + (f4 - f3)*(x - x1)/h + (f3 - f1)*(y - y1)/h
+                    S = S + T*w1*( (c_m - solve(x,y))**2 )				
+                enddo
+                do m = 4, 9
+                    x = x1*A(1, m) + x2*A(2, m) + x3*A(3, m)					
+                    y = y1*A(1, m) + y2*A(2, m) + y3*A(3, m)
+
+                    c_m = f1 + (f4 - f3)*(x - x1)/h + (f3 - f1)*(y - y1)/h
+                    S = S + T*w2*( (c_m - solve(x,y))**2 )
+                enddo
+
+            enddo
+        enddo
+            
+        L2_check_err = sqrt(S)
+
+        return
+    end function
 
 end module
